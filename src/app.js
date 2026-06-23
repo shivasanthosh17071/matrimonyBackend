@@ -76,6 +76,12 @@ app.get("/health", (req, res) =>
 );
 
 // ── Routes ────────────────────────────────────────────────
+app.get("/", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Telugu Rishtey API is running",
+  });
+});
 app.use("/api/master", require("./routes/masterRoutes"));
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/profile", require("./routes/profileRoutes"));
