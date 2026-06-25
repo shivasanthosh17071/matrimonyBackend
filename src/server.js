@@ -88,7 +88,7 @@ process.on("uncaughtException", (e) => {
   await connectDB();
   server.listen(PORT, () => {
     logger.info(
-      `🚀 Telugu Rishtey API running on port ${PORT} [${process.env.NODE_ENV}]`,
+      `🚀 Telugu Saptapadi API running on port ${PORT} [${process.env.NODE_ENV}]`,
     );
     logger.info(`📸 Cloudinary: ${process.env.CLOUDINARY_CLOUD_NAME}`);
     logger.info(`🌐 CORS: ${process.env.CLIENT_URL}`);

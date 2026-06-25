@@ -22,7 +22,7 @@ const sendOTP = async (mobile, otp) => {
     return { sid: "dev_mock_sid" };
   }
   const msg = await client.messages.create({
-    body: `Your Telugu Rishtey verification code is ${otp}. Valid for ${process.env.OTP_EXPIRY_MINUTES} minutes. Do not share this with anyone.`,
+    body: `Your Telugu Saptapadi verification code is ${otp}. Valid for ${process.env.OTP_EXPIRY_MINUTES} minutes. Do not share this with anyone.`,
     from: process.env.TWILIO_PHONE_NUMBER,
     to: mobile,
   });

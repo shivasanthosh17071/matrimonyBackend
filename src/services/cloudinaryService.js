@@ -2,12 +2,13 @@
 // Purpose: All Cloudinary operations — upload from buffer, delete, generate thumbnails
 // Replaces AWS S3. Photos are stored with permanent URLs (no signed URL expiry).
 
-const cloudinary = require('../config/cloudinary');
-const streamifier = require('streamifier');
-const logger = require('../utils/logger');
+const cloudinary = require("../config/cloudinary");
+const streamifier = require("streamifier");
+const logger = require("../utils/logger");
 
-const FOLDER = process.env.CLOUDINARY_FOLDER || 'telugu-rishtey/profiles';
-const MAX_FILE_BYTES = parseInt(process.env.MAX_PHOTO_SIZE_MB || '5') * 1024 * 1024;
+const FOLDER = process.env.CLOUDINARY_FOLDER || "telugu-saptapadi/profiles";
+const MAX_FILE_BYTES =
+  parseInt(process.env.MAX_PHOTO_SIZE_MB || "5") * 1024 * 1024;
 
 /**
  * Upload image buffer to Cloudinary
@@ -20,18 +21,38 @@ const uploadPhoto = (buffer, userId) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder: `${FOLDER}/${userId}`,
-        resource_type: 'image',
+        resource_type: "image",
         // Auto quality + format (WebP where supported)
         transformation: [
-          { width: 1200, height: 1600, crop: 'limit', quality: 'auto', fetch_format: 'auto' },
+          {
+            width: 1200,
+            height: 1600,
+            crop: "limit",
+            quality: "auto",
+            fetch_format: "auto",
+          },
         ],
         // Face detection for smart cropping on thumbnails
         eager: [
-          { width: 400, height: 500, crop: 'fill', gravity: 'face', quality: 'auto', fetch_format: 'auto' },
-          { width: 150, height: 150, crop: 'fill', gravity: 'face', quality: 'auto', fetch_format: 'auto' },
+          {
+            width: 400,
+            height: 500,
+            crop: "fill",
+            gravity: "face",
+            quality: "auto",
+            fetch_format: "auto",
+          },
+          {
+            width: 150,
+            height: 150,
+            crop: "fill",
+            gravity: "face",
+            quality: "auto",
+            fetch_format: "auto",
+          },
         ],
         eager_async: false,
-        tags: ['profile_photo', `user_${userId}`],
+        tags: ["profile_photo", `user_${userId}`],
       },
       (error, result) => {
         if (error) {
@@ -40,12 +61,12 @@ const uploadPhoto = (buffer, userId) => {
         }
         logger.info(`Photo uploaded to Cloudinary: ${result.public_id}`);
         resolve({
-          publicId:  result.public_id,
-          url:       result.secure_url,                   // full-size permanent URL
-          thumbnail: result.eager?.[0]?.secure_url || result.secure_url,  // 400x500 face crop
-          thumb150:  result.eager?.[1]?.secure_url || result.secure_url,  // 150x150 avatar
+          publicId: result.public_id,
+          url: result.secure_url, // full-size permanent URL
+          thumbnail: result.eager?.[0]?.secure_url || result.secure_url, // 400x500 face crop
+          thumb150: result.eager?.[1]?.secure_url || result.secure_url, // 150x150 avatar
         });
-      }
+      },
     );
 
     // Pipe the buffer into the upload stream
@@ -59,7 +80,9 @@ const uploadPhoto = (buffer, userId) => {
  */
 const deletePhoto = async (publicId) => {
   try {
-    const result = await cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
+    const result = await cloudinary.uploader.destroy(publicId, {
+      resource_type: "image",
+    });
     logger.info(`Cloudinary delete: ${publicId} → ${result.result}`);
     return result;
   } catch (err) {
@@ -75,13 +98,13 @@ const deletePhoto = async (publicId) => {
  */
 const getPrivacyBlurredUrl = (publicId) => {
   return cloudinary.url(publicId, {
-    effect: 'blur:800',
-    quality: 'auto',
-    fetch_format: 'auto',
+    effect: "blur:800",
+    quality: "auto",
+    fetch_format: "auto",
     width: 400,
     height: 500,
-    crop: 'fill',
-    gravity: 'face',
+    crop: "fill",
+    gravity: "face",
     secure: true,
   });
 };
@@ -91,11 +114,12 @@ const getPrivacyBlurredUrl = (publicId) => {
  */
 const getThumbnailUrl = (publicId, width = 400, height = 500) => {
   return cloudinary.url(publicId, {
-    width, height,
-    crop: 'fill',
-    gravity: 'face',
-    quality: 'auto',
-    fetch_format: 'auto',
+    width,
+    height,
+    crop: "fill",
+    gravity: "face",
+    quality: "auto",
+    fetch_format: "auto",
     secure: true,
   });
 };
@@ -108,14 +132,14 @@ const uploadJatakamPDF = (buffer, userId) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder: `${FOLDER}/${userId}/jatakam`,
-        resource_type: 'raw',
-        format: 'pdf',
-        tags: ['jatakam', `user_${userId}`],
+        resource_type: "raw",
+        format: "pdf",
+        tags: ["jatakam", `user_${userId}`],
       },
       (error, result) => {
         if (error) return reject(error);
         resolve({ publicId: result.public_id, url: result.secure_url });
-      }
+      },
     );
     streamifier.createReadStream(buffer).pipe(uploadStream);
   });

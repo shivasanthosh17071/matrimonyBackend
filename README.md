@@ -1,6 +1,6 @@
-# Telugu Rishtey — Backend API
+# Telugu Saptapadi — Backend API
 
-> Production-grade Node.js + Express + Socket.IO backend for the Telugu Rishtey matrimony platform.
+> Production-grade Node.js + Express + Socket.IO backend for the Telugu Saptapadi matrimony platform.
 > Focused on the Telugu community across Andhra Pradesh, Telangana, and global Telugu diaspora.
 
 ---

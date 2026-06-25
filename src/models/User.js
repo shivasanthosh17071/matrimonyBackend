@@ -1,5 +1,5 @@
 // File: src/models/User.js
-// Purpose: Core user schema for Telugu Rishtey matrimony platform
+// Purpose: Core user schema for Telugu Saptapadi matrimony platform
 // Telugu-specific fields: caste (kula), gotram, nakshatra, rashi, subsect, native district
 
 const mongoose = require("mongoose");
@@ -107,6 +107,10 @@ const userSchema = new mongoose.Schema(
     otpLockedUntil: Date,
     mobileVerified: { type: Boolean, default: false },
     emailVerified: { type: Boolean, default: false },
+    emailVerificationToken: { type: String, select: false },
+    emailVerificationExpires: Date,
+    passwordResetToken: { type: String, select: false },
+    passwordResetExpires: Date,
 
     // ── Basic Profile ─────────────────────────────────────────
     fullName: { type: String, required: true, trim: true, maxlength: 100 },
@@ -338,6 +342,8 @@ userSchema.methods.toPublicProfile = function () {
   return {
     _id: this._id,
     displayName: this.displayName,
+    email: this.email,
+    emailVerified: this.emailVerified,
     age: this.age,
     gender: this.gender,
     city: this.city,

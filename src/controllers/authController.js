@@ -9,8 +9,16 @@ const {
   clearTokenCookie,
 } = require("../utils/jwt");
 const { sendOTP, createOTPData, verifyOTP } = require("../services/otpService");
-const { sendWelcomeEmail } = require("../services/emailService");
+
 const logger = require("../utils/logger");
+const crypto = require("crypto");
+
+const {
+  sendWelcomeEmail,
+  sendVerificationEmail,
+  sendPasswordResetEmail,
+  sendPasswordResetEmails,
+} = require("../services/emailService");
 
 // ── POST /api/auth/register/step1 ─────────────────────────
 exports.registerStep1 = catchAsync(async (req, res, next) => {
@@ -155,6 +163,8 @@ exports.verifyOTP = catchAsync(async (req, res, next) => {
         _id: user._id,
         fullName: user.fullName,
         displayName: user.displayName,
+        email: user.email,
+        emailVerified: false,
         profileComplete: 20,
         isPremium: false,
         plan: "free",
@@ -163,7 +173,7 @@ exports.verifyOTP = catchAsync(async (req, res, next) => {
         isVerified: true,
       },
     },
-    "Account created! Meeru Telugu Rishtey family ki swagathim! 🌺",
+    "Account created! Meeru Telugu Saptapadi family ki swagathim! 🌺",
     200,
   );
 });
@@ -242,6 +252,8 @@ exports.loginEmail = catchAsync(async (req, res, next) => {
         role: user.role,
         fullName: user.fullName,
         displayName: user.displayName,
+        email: user.email, // ← ADD
+        emailVerified: user.emailVerified, // ← ADD
         profileComplete: user.profileComplete,
         isPremium: user.isPremiumActive(),
         plan: user.plan,
@@ -337,4 +349,298 @@ exports.getMe = catchAsync(async (req, res) => {
     "User fetched.",
     200,
   );
+});
+
+// ── POST /api/auth/send-verification-email ───────────────
+// Sends/resends verification email to the logged-in user's email address.
+exports.sendVerificationEmail = catchAsync(async (req, res, next) => {
+  const user = await User.findById(req.user._id);
+
+  if (!user.email) {
+    return next(
+      new AppError(
+        "No email address on your account. Add one in profile settings.",
+        400,
+        "NO_EMAIL",
+      ),
+    );
+  }
+
+  if (user.emailVerified) {
+    return next(
+      new AppError("Your email is already verified.", 400, "ALREADY_VERIFIED"),
+    );
+  }
+
+  // Rate-limit: prevent spam — one email per 2 minutes
+  if (user.emailVerificationExpires) {
+    const twoMinsAgo = new Date(Date.now() - 2 * 60 * 1000);
+    if (
+      new Date(user.emailVerificationExpires) >
+      new Date(Date.now() + 22 * 60 * 60 * 1000)
+    ) {
+      // Token was created less than 2 minutes ago (expires > 22h from now)
+      return next(
+        new AppError(
+          "Verification email already sent. Please wait 2 minutes before requesting again.",
+          429,
+          "EMAIL_RATE_LIMIT",
+        ),
+      );
+    }
+  }
+
+  // Generate token
+  const rawToken = crypto.randomBytes(32).toString("hex");
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(rawToken)
+    .digest("hex");
+
+  user.emailVerificationToken = hashedToken;
+  user.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+  await user.save({ validateBeforeSave: false });
+
+  const verificationUrl = `${process.env.CLIENT_URL}/verify-email?token=${rawToken}&email=${encodeURIComponent(user.email)}`;
+
+  await sendVerificationEmail(user, verificationUrl);
+
+  return sendSuccess(
+    res,
+    {},
+    `Verification email sent to ${user.email}. Valid for 24 hours.`,
+    200,
+  );
+});
+
+// ── GET /api/auth/verify-email?token=xxx&email=xxx ────────
+// Called when user clicks the link in their email.
+exports.verifyEmail = catchAsync(async (req, res, next) => {
+  const { token, email } = req.query;
+
+  if (!token || !email) {
+    return next(
+      new AppError(
+        "Invalid verification link. Please request a new one.",
+        400,
+        "INVALID_LINK",
+      ),
+    );
+  }
+
+  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+  const user = await User.findOne({
+    email: decodeURIComponent(email).toLowerCase(),
+    emailVerificationToken: hashedToken,
+    emailVerificationExpires: { $gt: new Date() },
+  }).select("+emailVerificationToken +emailVerificationExpires");
+
+  if (!user) {
+    return next(
+      new AppError(
+        "Verification link is invalid or has expired. Please request a new one.",
+        400,
+        "INVALID_OR_EXPIRED_TOKEN",
+      ),
+    );
+  }
+
+  user.emailVerified = true;
+  user.emailVerificationToken = undefined;
+  user.emailVerificationExpires = undefined;
+  await user.save({ validateBeforeSave: false });
+
+  // If request comes from browser (not API client), redirect to frontend
+  const acceptHeader = req.headers["accept"] || "";
+  if (acceptHeader.includes("text/html")) {
+    return res.redirect(
+      `${process.env.CLIENT_URL}/email-verified?success=true`,
+    );
+  }
+
+  return sendSuccess(
+    res,
+    { emailVerified: true },
+    "Email verified successfully! Your account is now fully verified.",
+    200,
+  );
+});
+
+// ── POST /api/auth/forgot-password ───────────────────────
+exports.forgotPassword = catchAsync(async (req, res, next) => {
+  const { email } = req.body;
+
+  if (!email)
+    return next(
+      new AppError("Please provide your email address.", 400, "MISSING_EMAIL"),
+    );
+
+  const user = await User.findOne({ email: email.toLowerCase() });
+
+  // Always return success even if email not found — prevents email enumeration attacks
+  if (!user) {
+    return sendSuccess(
+      res,
+      {},
+      "If an account exists with this email, you will receive a reset link shortly.",
+      200,
+    );
+  }
+
+  // Rate-limit: one reset email per 10 minutes
+  if (
+    user.passwordResetExpires &&
+    new Date(user.passwordResetExpires) > new Date(Date.now() + 50 * 60 * 1000)
+  ) {
+    return sendSuccess(
+      res,
+      {},
+      "If an account exists with this email, you will receive a reset link shortly.",
+      200,
+    );
+  }
+
+  const rawToken = crypto.randomBytes(32).toString("hex");
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(rawToken)
+    .digest("hex");
+
+  user.passwordResetToken = hashedToken;
+  user.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+  await user.save({ validateBeforeSave: false });
+
+  const resetUrl = `${process.env.CLIENT_URL}/reset-password?token=${rawToken}&email=${encodeURIComponent(user.email)}`;
+
+  await sendPasswordResetEmails(user, resetUrl);
+
+  return sendSuccess(
+    res,
+    {},
+    "If an account exists with this email, you will receive a reset link shortly.",
+    200,
+  );
+});
+
+// ── POST /api/auth/reset-password ────────────────────────
+exports.resetPassword = catchAsync(async (req, res, next) => {
+  const { token, email, password, confirmPassword } = req.body;
+
+  if (!token || !email || !password) {
+    return next(
+      new AppError(
+        "Token, email, and new password are required.",
+        400,
+        "MISSING_FIELDS",
+      ),
+    );
+  }
+
+  if (password !== confirmPassword) {
+    return next(
+      new AppError("Passwords do not match.", 400, "PASSWORD_MISMATCH"),
+    );
+  }
+
+  if (password.length < 8) {
+    return next(
+      new AppError(
+        "Password must be at least 8 characters.",
+        400,
+        "WEAK_PASSWORD",
+      ),
+    );
+  }
+
+  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+  const user = await User.findOne({
+    email: decodeURIComponent(email).toLowerCase(),
+    passwordResetToken: hashedToken,
+    passwordResetExpires: { $gt: new Date() },
+  }).select("+passwordResetToken +passwordResetExpires +password");
+
+  if (!user) {
+    return next(
+      new AppError(
+        "Password reset link is invalid or has expired. Please request a new one.",
+        400,
+        "INVALID_OR_EXPIRED_TOKEN",
+      ),
+    );
+  }
+
+  user.password = password; // bcrypt hash applied in pre-save hook
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+  await user.save(); // run full validation so bcrypt hook fires
+
+  // Auto-login: generate token so user is logged in immediately after reset
+  const jwtToken = generateAccessToken(user._id, user.role);
+  setTokenCookie(res, jwtToken);
+
+  return sendSuccess(
+    res,
+    {
+      token: jwtToken,
+      message: "Password reset successful. You are now logged in.",
+    },
+    "Password reset successful.",
+    200,
+  );
+});
+
+// ── PATCH /api/auth/change-password ──────────────────────
+// For logged-in users changing their own password.
+exports.changePassword = catchAsync(async (req, res, next) => {
+  const { currentPassword, newPassword, confirmNewPassword } = req.body;
+
+  if (!currentPassword || !newPassword || !confirmNewPassword) {
+    return next(
+      new AppError(
+        "Current password, new password, and confirmation are required.",
+        400,
+        "MISSING_FIELDS",
+      ),
+    );
+  }
+
+  if (newPassword !== confirmNewPassword) {
+    return next(
+      new AppError("New passwords do not match.", 400, "PASSWORD_MISMATCH"),
+    );
+  }
+
+  if (newPassword.length < 8) {
+    return next(
+      new AppError(
+        "New password must be at least 8 characters.",
+        400,
+        "WEAK_PASSWORD",
+      ),
+    );
+  }
+
+  if (currentPassword === newPassword) {
+    return next(
+      new AppError(
+        "New password must be different from your current password.",
+        400,
+        "SAME_PASSWORD",
+      ),
+    );
+  }
+
+  const user = await User.findById(req.user._id).select("+password");
+  if (!(await user.comparePassword(currentPassword))) {
+    return next(
+      new AppError("Current password is incorrect.", 401, "WRONG_PASSWORD"),
+    );
+  }
+
+  user.password = newPassword;
+  await user.save();
+
+  return sendSuccess(res, {}, "Password changed successfully.", 200);
 });

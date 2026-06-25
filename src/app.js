@@ -69,7 +69,7 @@ if (process.env.NODE_ENV !== "test") {
 app.get("/health", (req, res) =>
   res.status(200).json({
     status: "ok",
-    service: "Telugu Rishtey API",
+    service: "Telugu Saptapadi API",
     environment: process.env.NODE_ENV,
     timestamp: new Date().toISOString(),
   }),
@@ -79,7 +79,7 @@ app.get("/health", (req, res) =>
 app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
-    message: "Telugu Rishtey API is running",
+    message: "Telugu Saptapadi API is running",
   });
 });
 app.use("/api/master", require("./routes/masterRoutes"));

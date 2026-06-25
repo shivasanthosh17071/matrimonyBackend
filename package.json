@@ -1,7 +1,7 @@
 {
-  "name": "telugu-rishtey-backend",
+  "name": "telugu-saptapadi-backend",
   "version": "1.0.0",
-  "description": "Production backend for Telugu Rishtey — Telugu matrimony platform",
+  "description": "Production backend for Telugu Saptapadi — Telugu matrimony platform",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
@@ -40,5 +40,7 @@
     "nodemon": "^3.1.4",
     "supertest": "^7.0.0"
   },
-  "engines": { "node": ">=18.0.0" }
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }

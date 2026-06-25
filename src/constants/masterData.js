@@ -1,6 +1,6 @@
 // File: src/constants/masterData.js
 // ═══════════════════════════════════════════════════════════════════════
-//  TELUGU RISHTEY — MASTER DROPDOWN DATA
+//  Telugu Saptapadi — MASTER DROPDOWN DATA
 //  All select/dropdown options used across frontend forms and backend.
 //  Single source of truth. Edit here only.
 //  Used by: profile wizard, registration, browse filters, admin panel.
