@@ -24,13 +24,16 @@ app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 // ── CORS ──────────────────────────────────────────────────
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:8080",
+    origin: [
+      "http://localhost:8080",
+      "http://localhost:5173",
+      process.env.CLIENT_URL,
+    ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-  }),
+  })
 );
-
 // ── Stripe webhook needs raw body — register BEFORE json parser ──
 app.post(
   "/api/payments/stripe/webhook",
