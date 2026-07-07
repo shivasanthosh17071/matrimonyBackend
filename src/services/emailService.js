@@ -262,4 +262,5 @@ module.exports = {
   sendPlanConfirmationEmail,
   sendInterestNotificationEmail,
   sendPasswordResetEmails,
+  sendAccountSuspendedEmail,
 };

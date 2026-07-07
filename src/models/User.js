@@ -165,9 +165,9 @@ const userSchema = new mongoose.Schema(
     weight: Number, // kg
     complexion: {
       type: String,
-      enum: ["very_fair", "fair", "wheatish", "dusky", "dark"],
+      enum: ["very_fair", "fair", "wheatish", "dusky", "dark"],  default: undefined,
     },
-    bodyType: { type: String, enum: ["slim", "average", "athletic", "heavy"] },
+    bodyType: { type: String, enum: ["slim", "average", "athletic", "heavy"],  default: undefined, },
     bloodGroup: {
       type: String,
       enum: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],

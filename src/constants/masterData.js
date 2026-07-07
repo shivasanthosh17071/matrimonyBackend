@@ -9,9 +9,9 @@
 // ── RELIGION ────────────────────────────────────────────────────────────
 const RELIGIONS = [
   { value: "hindu", label: "Hindu" },
-  { value: "christian", label: "Christian" },
-  { value: "muslim", label: "Muslim" },
-  { value: "other", label: "Other" },
+  // { value: "christian", label: "Christian" },
+  // { value: "muslim", label: "Muslim" },
+  // { value: "other", label: "Other" },
 ];
 
 // ── CASTES (Telugu community) ────────────────────────────────────────────
