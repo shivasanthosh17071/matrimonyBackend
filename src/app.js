@@ -17,23 +17,20 @@ const logger = require("./utils/logger");
 const paymentController = require("./controllers/paymentController");
 
 const app = express();
-app.set("trust proxy", 1);
+
 // ── Security headers ──────────────────────────────────────
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 
 // ── CORS ──────────────────────────────────────────────────
 app.use(
   cors({
-    origin: [
-      "http://localhost:8080",
-      "http://localhost:5173",
-      process.env.CLIENT_URL,
-    ],
+    origin: process.env.CLIENT_URL || "http://localhost:8080",
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-  })
+  }),
 );
+
 // ── Stripe webhook needs raw body — register BEFORE json parser ──
 app.post(
   "/api/payments/stripe/webhook",
@@ -72,20 +69,13 @@ if (process.env.NODE_ENV !== "test") {
 app.get("/health", (req, res) =>
   res.status(200).json({
     status: "ok",
-    service: "Telugu Saptapadi API",
+    service: "Telugu Rishtey API",
     environment: process.env.NODE_ENV,
     timestamp: new Date().toISOString(),
   }),
 );
 
 // ── Routes ────────────────────────────────────────────────
-app.get("/", (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: "Telugu Saptapadi API is running",
-  });
-});
-app.use("/api/master", require("./routes/masterRoutes"));
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/profile", require("./routes/profileRoutes"));
 app.use("/api/matches", require("./routes/matchRoutes"));
@@ -94,6 +84,7 @@ app.use("/api/chat", require("./routes/chatRoutes"));
 app.use("/api/payments", require("./routes/paymentRoutes"));
 app.use("/api/admin", require("./routes/adminRoutes"));
 app.use("/api/reports", require("./routes/reportRoutes"));
+app.use("/api/contact", require("./routes/contactRoutes"));
 
 // ── 404 ───────────────────────────────────────────────────
 app.use("*", (req, res) =>

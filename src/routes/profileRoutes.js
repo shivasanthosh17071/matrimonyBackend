@@ -8,8 +8,8 @@ router.get('/me',                               protect,       c.getMyProfile);
 router.put('/wizard/step/:step',                protect,       c.updateWizardStep);
 router.post('/photos',                          protect,       upload.single('photo'),   c.uploadPhoto);
 router.delete('/photos/:publicId',              protect,       c.deletePhoto);
-router.patch('/photos/:publicId/primary',       protect,       c.setPrimaryPhoto);
-router.patch('/photos/:publicId/privacy',       protect,       c.togglePhotoPrivacy);
+router.put('/photos/:publicId/primary',       protect,       c.setPrimaryPhoto);
+router.put('/photos/:publicId/privacy',       protect,       c.togglePhotoPrivacy);
 router.post('/jatakam/pdf',                     protect,       uploadPDF.single('pdf'),  c.uploadJatakamPDF);
 router.get('/:id',                              optionalAuth,  c.getProfile);
 

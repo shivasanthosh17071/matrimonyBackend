@@ -7,5 +7,5 @@ router.get("/conversations", protect, c.getConversations);
 router.get("/:partnerId/messages", protect, c.getMessages);
 router.post("/:partnerId/messages", protect, c.sendMessage);
 router.delete("/messages/:messageId", protect, c.deleteMessage);
-router.patch("/messages/:messageId", protect, c.editMessage);
+router.put("/messages/:messageId", protect, c.editMessage);
 module.exports = router;

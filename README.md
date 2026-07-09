@@ -99,8 +99,8 @@ Privacy-blurred photos use Cloudinary on-the-fly `effect: blur:800` — no re-up
 | PUT | `/api/profile/wizard/step/:step` | JWT |
 | POST | `/api/profile/photos` | JWT |
 | DELETE | `/api/profile/photos/:publicId` | JWT |
-| PATCH | `/api/profile/photos/:publicId/primary` | JWT |
-| PATCH | `/api/profile/photos/:publicId/privacy` | JWT + Premium |
+| put | `/api/profile/photos/:publicId/primary` | JWT |
+| put | `/api/profile/photos/:publicId/privacy` | JWT + Premium |
 | POST | `/api/profile/jatakam/pdf` | JWT |
 
 ### Matches
@@ -118,7 +118,7 @@ Privacy-blurred photos use Cloudinary on-the-fly `effect: blur:800` — no re-up
 | Method | Endpoint                     | Auth |
 | ------ | ---------------------------- | ---- |
 | POST   | `/api/interests/send`        | JWT  |
-| PATCH  | `/api/interests/:id/respond` | JWT  |
+| put  | `/api/interests/:id/respond` | JWT  |
 | GET    | `/api/interests/inbox`       | JWT  |
 | GET    | `/api/interests/sent`        | JWT  |
 | GET    | `/api/interests/mutual`      | JWT  |
@@ -151,15 +151,15 @@ ad
 | ------ | ------------------------------------- | --------- |
 | GET    | `/api/admin/dashboard`                | Admin/Mod |
 | GET    | `/api/admin/users`                    | Admin/Mod |
-| PATCH  | `/api/admin/users/:id/suspend`        | Admin     |
-| PATCH  | `/api/admin/users/:id/unsuspend`      | Admin     |
-| PATCH  | `/api/admin/users/:id/verify-aadhaar` | Admin/Mod |
-| PATCH  | `/api/admin/users/:id/feature`        | Admin/Mod |
+| put  | `/api/admin/users/:id/suspend`        | Admin     |
+| put  | `/api/admin/users/:id/unsuspend`      | Admin     |
+| put  | `/api/admin/users/:id/verify-aadhaar` | Admin/Mod |
+| put  | `/api/admin/users/:id/feature`        | Admin/Mod |
 | GET    | `/api/admin/photos/pending`           | Admin/Mod |
-| PATCH  | `/api/admin/photos/approve`           | Admin/Mod |
+| put  | `/api/admin/photos/approve`           | Admin/Mod |
 | DELETE | `/api/admin/photos/reject`            | Admin/Mod |
 | GET    | `/api/admin/reports`                  | Admin/Mod |
-| PATCH  | `/api/admin/reports/:id/resolve`      | Admin/Mod |
+| put  | `/api/admin/reports/:id/resolve`      | Admin/Mod |
 | GET    | `/api/admin/payments`                 | Admin     |
 
 ### Reports

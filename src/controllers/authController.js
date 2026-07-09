@@ -591,7 +591,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   );
 });
 
-// ── PATCH /api/auth/change-password ──────────────────────
+// ── put /api/auth/change-password ──────────────────────
 // For logged-in users changing their own password.
 exports.changePassword = catchAsync(async (req, res, next) => {
   const { currentPassword, newPassword, confirmNewPassword } = req.body;

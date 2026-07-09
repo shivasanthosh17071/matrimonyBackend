@@ -288,9 +288,11 @@ userSchema.virtual("computedAge").get(function () {
 });
 
 userSchema.virtual("primaryPhoto").get(function () {
+  const photos = this.photos ?? [];
+
   return (
-    this.photos.find((p) => p.isPrimary && p.isApproved) ||
-    this.photos.find((p) => p.isApproved) ||
+    photos.find((p) => p.isPrimary && p.isApproved) ||
+    photos.find((p) => p.isApproved) ||
     null
   );
 });

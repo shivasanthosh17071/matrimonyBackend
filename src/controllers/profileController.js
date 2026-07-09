@@ -89,7 +89,7 @@ exports.deletePhoto = catchAsync(async (req, res, next) => {
   return sendSuccess(res, { profileComplete: user.profileComplete }, 'Photo deleted.', 200);
 });
 
-// ── PATCH /api/profile/photos/:publicId/primary ───────────
+// ── put /api/profile/photos/:publicId/primary ───────────
 exports.setPrimaryPhoto = catchAsync(async (req, res, next) => {
   const pid = decodeURIComponent(req.params.publicId);
   const user = await User.findById(req.user._id);
@@ -102,7 +102,7 @@ exports.setPrimaryPhoto = catchAsync(async (req, res, next) => {
   return sendSuccess(res, {}, 'Primary photo updated.', 200);
 });
 
-// ── PATCH /api/profile/photos/:publicId/privacy ───────────
+// ── put /api/profile/photos/:publicId/privacy ───────────
 exports.togglePhotoPrivacy = catchAsync(async (req, res, next) => {
   if (!req.user.isPremiumActive())
     return next(new AppError('Photo privacy requires Silver plan or higher.', 403, 'UPGRADE_REQUIRED'));

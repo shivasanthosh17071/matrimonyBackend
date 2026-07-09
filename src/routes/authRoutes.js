@@ -21,7 +21,7 @@ router.post(
 router.get("/verify-email", c.verifyEmail); // public — called from email link
 router.post("/forgot-password", c.forgotPassword);
 router.post("/reset-password", c.resetPassword);
-router.patch(
+router.put(
   "/change-password",
   require("../middleware/auth").protect,
   c.changePassword,
